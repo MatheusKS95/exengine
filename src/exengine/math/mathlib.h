@@ -602,7 +602,7 @@ static inline void quat_lerp(quat q, quat a, quat b, float weight)
   quat_norm(q, q);
 }
 
-static inline void quat_slerp(quat q, quat a, quat b, float t)
+static inline void quat_slerp(quat q, quat a, quat b, float weight)
 {
   float dot = quat_inner_product(a, b);
   
@@ -614,14 +614,14 @@ static inline void quat_slerp(quat q, quat a, quat b, float t)
   }
 
   if (dot > DOT_THRESHOLD) {
-    quat_lerp(q, a, b, t);
+    quat_lerp(q, a, b, weight);
     quat_norm(q, q);
     return;
   }
 
   dot = MIN(MAX(dot, -1.0f), 1.0f);
   float theta_0 = acosf(dot);
-  float theta = theta_0 * t;
+  float theta = theta_0 * weight;
 
   float sin_theta = sinf(theta);
   float sin_theta_0 = sinf(theta_0);
