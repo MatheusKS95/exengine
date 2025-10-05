@@ -604,33 +604,38 @@ static inline void quat_lerp(quat q, quat a, quat b, float weight)
 
 static inline void quat_slerp(quat q, quat a, quat b, float weight)
 {
-  float dot = quat_inner_product(b, a);
-
-  quat a2 = {a[0], a[1], a[2], a[3]};
-
-  if (dot < 0) {
-    quat_scale(a2, a, -1);
+  float dot = quat_inner_product(a, b);
+  
+  if (dot < 0.0f) {
     dot = -dot;
+    quat tmp;
+    quat_scale(tmp, a, -1.0f);
+    memcpy(a, tmp, sizeof(quat));
   }
 
   if (dot > DOT_THRESHOLD) {
-    quat_lerp(q, a2, b, weight);
+    quat_lerp(q, a, b, weight);
+    quat_norm(q, q);
     return;
   }
 
   dot = MIN(MAX(dot, -1.0f), 1.0f);
+  float theta_0 = acosf(dot);
+  float theta = theta_0 * weight;
 
-  float theta = acos(dot) * weight;
+  float sin_theta = sinf(theta);
+  float sin_theta_0 = sinf(theta_0);
 
-  quat c;
-  quat_scale(c, a2, dot);
-  quat_sub(c, b, c);
-  quat_norm(c, c);
+  float s0 = cosf(theta) - dot * sin_theta / sin_theta_0;
+  float s1 = sin_theta / sin_theta_0;
 
-  quat_scale(a2, a2, cos(theta));
-  quat_scale(c, c, sin(theta));
-  quat_add(q, a, c);
+  quat q0, q1;
+  quat_scale(q0, a, s0);
+  quat_scale(q1, b, s1);
+  quat_add(q, q0, q1);
+  quat_norm(q, q);
 }
+
 
 #include <float.h>
 static inline void mat4x4_rotate_quat(mat4x4 mat, quat q) {
